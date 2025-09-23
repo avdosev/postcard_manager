@@ -38,7 +38,7 @@ draw_text(
     text=config['username_info']['content'],
     position=config['username_info']["position"],
     font_name=config['username_info']['font'],
-    font_size=40,
+    font_size=45,
 )
 
 draw_text(
