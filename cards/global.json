@@ -1,0 +1,16 @@
+{
+    "layout": "layout/default_layer.png",
+    "username_info": {
+        "content": "avdosev",
+        "font": "fonts/MarckScript-Regular.ttf",
+        "position": {
+    
+        }
+    },
+    "cardname_info": {
+        "font": "fonts/NotoSerifDisplay-Italic.ttf",
+        "position": {
+
+        }
+    }
+}
