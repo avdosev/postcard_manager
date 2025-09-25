@@ -1,0 +1,9 @@
+{
+    "parent": "cards/global_vertical.json",
+    "image": {
+        "path": "card_images/IMG_20250925_224147_743.jpg"
+    },
+    "cardname_info": {
+        "content": "Под сводами ночи"
+    }
+}

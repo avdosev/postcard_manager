@@ -23,7 +23,7 @@ def draw_text(text, position, font_name=None, font_size=None, fill=(0, 0, 0, 255
     return {"pos": (x, y), "font_size": getattr(font, "size", None)}
 
 
-def images_to_pdf(image1_path, image2_path, output_pdf_path):
+def images_to_pdf(images, output_pdf_path, rotate):
     """
     Конвертирует два изображения в PDF с размером страниц 104x146 мм
     
@@ -48,7 +48,8 @@ def images_to_pdf(image1_path, image2_path, output_pdf_path):
     images_for_pdf = []
     
     # Обрабатываем каждое изображение
-    for i, img_path in enumerate([image1_path, image2_path], 1):
+    for i, img_info in enumerate(images, 1):
+        img_path = img_info['path']
         if not os.path.exists(img_path):
             raise FileNotFoundError(f"Изображение не найдено: {img_path}")
             
@@ -59,10 +60,15 @@ def images_to_pdf(image1_path, image2_path, output_pdf_path):
         # Конвертируем в RGB если необходимо (для PDF)
         if img.mode != 'RGB':
             img = img.convert('RGB')
+
+        if rotate:
+            img = img.rotate(90, expand=True)
         
-        # Изменяем размер изображения под страницу, сохраняя пропорции
-        img_resized = resize_image_to_fit(img, page_width_px, page_height_px)
-        
+        if img_info['adoptation'] == 'fit':
+            # Изменяем размер изображения под страницу, сохраняя пропорции
+            img_resized = resize_image_to_fit(img, page_width_px, page_height_px)
+        else:
+            img_resized = resize_image_to_exact(img, page_width_px, page_height_px)
         # Создаем белую страницу нужного размера
         page = Image.new('RGB', (page_width_px, page_height_px), 'white')
         
@@ -108,15 +114,22 @@ def resize_image_to_exact(img, target_width, target_height):
     """
     Изменяет размер изображения точно под заданные размеры (может обрезать края)
     """
+    img_width, img_height = img.size
+    crop_width, crop_height = target_width, target_height
+    return img.crop(((img_width - crop_width) // 2,
+                         (img_height - crop_height) // 2,
+                         (img_width + crop_width) // 2,
+                         (img_height + crop_height) // 2))
     return img.resize((target_width, target_height), Image.Resampling.LANCZOS)
 
 # Пример использования
 if __name__ == "__main__":
 
-    global_config = read_json('cards/global.json')
-    concrete_config = read_json('cards/1.json')
+    config = read_json('cards/2.json')
+    if "parent" in config:
+        parent_config = read_json(config["parent"])
+        config = deep_merge(parent_config, config)
 
-    config = deep_merge(global_config, concrete_config)
 
     background_path = config['layout']
 
@@ -148,11 +161,25 @@ if __name__ == "__main__":
     print("saved tmp image:", out_path)
 
     # Укажите пути к вашим изображениям
-    photo_path = out_path
+    photo_path = config['image']['path']
     layout_path = out_path
     output_path = "tmp/postcard.pdf"
     
     try:
-        images_to_pdf(photo_path, layout_path, output_path)
+        images_to_pdf(
+            [
+                {
+                    'path': photo_path,
+                    'adoptation': 'fit',
+                },
+                {
+                    'path': layout_path,
+                    'adoptation': 'fit',
+                },
+                    
+            ], 
+            output_path, 
+            config.get('rotate_90', False)
+        )
     except Exception as e:
         print(f"Ошибка: {e}")

@@ -1,12 +1,13 @@
 {
     "layout": "layout/default_vertical_layer.png",
+    "rotate_90": true,
     "username_info": {
         "content": "@avdosev",
         "font": "fonts/MarckScript-Regular.ttf",
-        "position": [1260, 960]
+        "position": [580, 310]
     },
     "cardname_info": {
         "font": "fonts/NotoSerifDisplay-Italic.ttf",
-        "position": [180, 220]
+        "position": [120, 220]
     }
 }

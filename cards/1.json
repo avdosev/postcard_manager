@@ -1,4 +1,8 @@
 {
+    "parent": "cards/global.json",
+    "image": {
+        "path": "card_images/IMG20230424205517.jpg"
+    },
     "cardname_info": {
         "content": "Тени Исаакия"
     }
