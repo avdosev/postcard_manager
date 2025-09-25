@@ -54,3 +54,105 @@ os.makedirs(os.path.dirname(out_path), exist_ok=True)
 img.save(out_path)
 
 print("saved tmp image:", out_path)
+
+from PIL import Image
+import os
+
+def images_to_pdf(image1_path, image2_path, output_pdf_path):
+    """
+    Конвертирует два изображения в PDF с размером страниц 104x146 мм
+    
+    Args:
+        image1_path: путь к первому изображению
+        image2_path: путь к второму изображению  
+        output_pdf_path: путь для сохранения PDF файла
+    """
+    
+    # Размеры страницы в мм
+    page_width_mm = 146
+    page_height_mm = 104
+    
+    # Конвертируем мм в пиксели (300 DPI для высокого качества печати)
+    dpi = 300
+    page_width_px = int(page_width_mm * dpi / 25.4)
+    page_height_px = int(page_height_mm * dpi / 25.4)
+    
+    print(f"Размер страницы в пикселях: {page_width_px}x{page_height_px}")
+    
+    # Список для хранения обработанных изображений
+    images_for_pdf = []
+    
+    # Обрабатываем каждое изображение
+    for i, img_path in enumerate([image1_path, image2_path], 1):
+        if not os.path.exists(img_path):
+            raise FileNotFoundError(f"Изображение не найдено: {img_path}")
+            
+        # Открываем изображение
+        img = Image.open(img_path)
+        print(f"Изображение {i}: {img.size}, режим: {img.mode}")
+        
+        # Конвертируем в RGB если необходимо (для PDF)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Изменяем размер изображения под страницу, сохраняя пропорции
+        img_resized = resize_image_to_fit(img, page_width_px, page_height_px)
+        
+        # Создаем белую страницу нужного размера
+        page = Image.new('RGB', (page_width_px, page_height_px), 'white')
+        
+        # Центрируем изображение на странице
+        x_offset = (page_width_px - img_resized.width) // 2
+        y_offset = (page_height_px - img_resized.height) // 2
+        page.paste(img_resized, (x_offset, y_offset))
+        
+        images_for_pdf.append(page)
+    
+    # Сохраняем в PDF
+    images_for_pdf[0].save(
+        output_pdf_path,
+        save_all=True,
+        append_images=images_for_pdf[1:],
+        resolution=dpi,
+        format='PDF'
+    )
+    
+    print(f"PDF успешно создан: {output_pdf_path}")
+
+def resize_image_to_fit(img, target_width, target_height):
+    """
+    Изменяет размер изображения, сохраняя пропорции и вписывая в заданные размеры
+    """
+    # Вычисляем коэффициенты масштабирования
+    scale_w = target_width / img.width
+    scale_h = target_height / img.height
+    
+    # Выбираем меньший коэффициент, чтобы изображение поместилось целиком
+    scale = min(scale_w, scale_h)
+    
+    # Новые размеры
+    new_width = int(img.width * scale)
+    new_height = int(img.height * scale)
+    
+    # Изменяем размер с высоким качеством
+    # Для фотографий используем LANCZOS, для черно-белой графики - NEAREST или LANCZOS
+    return img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+# Альтернативная функция для точного соответствия размеру (с обрезкой)
+def resize_image_to_exact(img, target_width, target_height):
+    """
+    Изменяет размер изображения точно под заданные размеры (может обрезать края)
+    """
+    return img.resize((target_width, target_height), Image.Resampling.LANCZOS)
+
+# Пример использования
+if __name__ == "__main__":
+    # Укажите пути к вашим изображениям
+    photo_path = out_path
+    layout_path = out_path
+    output_path = "postcard.pdf"
+    
+    try:
+        images_to_pdf(photo_path, layout_path, output_path)
+    except Exception as e:
+        print(f"Ошибка: {e}")
