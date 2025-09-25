@@ -150,7 +150,7 @@ if __name__ == "__main__":
     # Укажите пути к вашим изображениям
     photo_path = out_path
     layout_path = out_path
-    output_path = "postcard.pdf"
+    output_path = "tmp/postcard.pdf"
     
     try:
         images_to_pdf(photo_path, layout_path, output_path)
