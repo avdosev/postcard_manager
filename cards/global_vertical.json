@@ -1,0 +1,12 @@
+{
+    "layout": "layout/default_vertical_layer.png",
+    "username_info": {
+        "content": "@avdosev",
+        "font": "fonts/MarckScript-Regular.ttf",
+        "position": [1260, 960]
+    },
+    "cardname_info": {
+        "font": "fonts/NotoSerifDisplay-Italic.ttf",
+        "position": [180, 220]
+    }
+}
