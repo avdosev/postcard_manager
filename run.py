@@ -2,7 +2,12 @@ import os
 
 from PIL import Image, ImageDraw, ImageFont
 from utils import deep_merge, read_json
+from aspectfit import to_aspect, parse_aspect
 
+CARD_WIDTH = 146
+CARD_HEIGHT = 105
+CARD_WIDTH = 150
+CARD_HEIGHT = 109
 
 def draw_text(text, position, font_name=None, font_size=None, fill=(0, 0, 0, 255)):
     # position: (x, y) или (x, y, w, h) — лишнее игнорим
@@ -34,11 +39,11 @@ def images_to_pdf(images, output_pdf_path, rotate):
     """
     
     # Размеры страницы в мм
-    page_width_mm = 146
-    page_height_mm = 104
+    page_width_mm = CARD_WIDTH
+    page_height_mm = CARD_HEIGHT
     
     # Конвертируем мм в пиксели (300 DPI для высокого качества печати)
-    dpi = 300
+    dpi = 600
     page_width_px = int(page_width_mm * dpi / 25.4)
     page_height_px = int(page_height_mm * dpi / 25.4)
     
@@ -68,7 +73,8 @@ def images_to_pdf(images, output_pdf_path, rotate):
             # Изменяем размер изображения под страницу, сохраняя пропорции
             img_resized = resize_image_to_fit(img, page_width_px, page_height_px)
         else:
-            img_resized = resize_image_to_exact(img, page_width_px, page_height_px)
+            img_resized = resize_image_to_exact(img, page_width_px, page_height_px, gravity=img_info["gravity"])
+            print("Ресайзнутое изображение:", img_resized.size)
         # Создаем белую страницу нужного размера
         page = Image.new('RGB', (page_width_px, page_height_px), 'white')
         
@@ -110,22 +116,20 @@ def resize_image_to_fit(img, target_width, target_height):
     return img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
 # Альтернативная функция для точного соответствия размеру (с обрезкой)
-def resize_image_to_exact(img, target_width, target_height):
+def resize_image_to_exact(img, target_width, target_height, gravity):
     """
     Изменяет размер изображения точно под заданные размеры (может обрезать края)
     """
-    img_width, img_height = img.size
-    crop_width, crop_height = target_width, target_height
-    return img.crop(((img_width - crop_width) // 2,
-                         (img_height - crop_height) // 2,
-                         (img_width + crop_width) // 2,
-                         (img_height + crop_height) // 2))
+    img = to_aspect(img, aspect=parse_aspect(f"{target_width}:{target_height}"), crop_gravity=gravity)
+    print("Обрезанное изображение:", img.size)
     return img.resize((target_width, target_height), Image.Resampling.LANCZOS)
+    # return img
 
 # Пример использования
 if __name__ == "__main__":
 
-    config = read_json('cards/2.json')
+    config = read_json('cards/4.json')
+
     if "parent" in config:
         parent_config = read_json(config["parent"])
         config = deep_merge(parent_config, config)
@@ -163,14 +167,15 @@ if __name__ == "__main__":
     # Укажите пути к вашим изображениям
     photo_path = config['image']['path']
     layout_path = out_path
-    output_path = "tmp/postcard.pdf"
+    output_path = config['output_pdf']
     
     try:
         images_to_pdf(
             [
                 {
                     'path': photo_path,
-                    'adoptation': 'fit',
+                    'adoptation': 'aspect_fit',
+                    "gravity": config['image'].get("gravity", "center")
                 },
                 {
                     'path': layout_path,

@@ -1,7 +1,9 @@
 {
     "parent": "cards/global.json",
+    "output_pdf": "tmp/1.pdf",
     "image": {
-        "path": "card_images/IMG20230424205517.jpg"
+        "path": "card_images/IMG20230424205517_v2.png",
+        "gravity": "right"
     },
     "cardname_info": {
         "content": "Тени Исаакия"

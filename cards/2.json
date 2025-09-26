@@ -1,5 +1,6 @@
 {
     "parent": "cards/global_vertical.json",
+    "output_pdf": "tmp/2.pdf",
     "image": {
         "path": "card_images/IMG_20250925_224147_743.jpg"
     },

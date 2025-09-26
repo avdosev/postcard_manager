@@ -1,0 +1,10 @@
+{
+    "parent": "cards/global_vertical.json",
+    "output_pdf": "tmp/4.pdf",
+    "image": {
+        "path": "card_images/2023-09-30 17-34-12.JPG"
+    },
+    "cardname_info": {
+        "content": "Осень в Гатчине"
+    }
+}

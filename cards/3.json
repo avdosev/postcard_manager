@@ -1,0 +1,11 @@
+{
+    "parent": "cards/global_vertical.json",
+    "output_pdf": "tmp/3.pdf",
+    "image": {
+        "path": "card_images/IMG20230424202816.jpg",
+        "gravity": "right"
+    },
+    "cardname_info": {
+        "content": "Под сводами ночи"
+    }
+}
