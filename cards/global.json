@@ -1,5 +1,7 @@
 {
-    "layout": "layout/default_layer.png",
+    "layout": {
+        "path": "layout/default_layer.png"
+    },
     "username_info": {
         "content": "@avdosev",
         "font": "fonts/MarckScript-Regular.ttf",

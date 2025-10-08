@@ -4,12 +4,10 @@ from PIL import Image, ImageDraw, ImageFont
 from utils import deep_merge, read_json
 from aspectfit import to_aspect, parse_aspect
 
-CARD_WIDTH = 146
-CARD_HEIGHT = 105
-CARD_WIDTH = 150
-CARD_HEIGHT = 109
+CARD_WIDTH = 146+2
+CARD_HEIGHT = 105+2
 
-def draw_text(text, position, font_name=None, font_size=None, fill=(0, 0, 0, 255)):
+def draw_text(draw, text, position, font_name=None, font_size=None, fill=(0, 0, 0, 255)):
     # position: (x, y) или (x, y, w, h) — лишнее игнорим
     if not isinstance(position, (list, tuple)) or len(position) < 2:
         raise TypeError("position должен быть (x, y) или (x, y, w, h)")
@@ -28,7 +26,7 @@ def draw_text(text, position, font_name=None, font_size=None, fill=(0, 0, 0, 255
     return {"pos": (x, y), "font_size": getattr(font, "size", None)}
 
 
-def images_to_pdf(images, output_pdf_path, rotate):
+def images_to_pdf(images, output_pdf_path):
     """
     Конвертирует два изображения в PDF с размером страниц 104x146 мм
     
@@ -39,11 +37,13 @@ def images_to_pdf(images, output_pdf_path, rotate):
     """
     
     # Размеры страницы в мм
-    page_width_mm = CARD_WIDTH
-    page_height_mm = CARD_HEIGHT
+    page_width_mm = CARD_WIDTH+2
+    page_height_mm = CARD_HEIGHT+2
     
     # Конвертируем мм в пиксели (300 DPI для высокого качества печати)
     dpi = 600
+    image_width_px = int(CARD_WIDTH * dpi / 25.4)
+    image_height_px = int(CARD_HEIGHT * dpi / 25.4)
     page_width_px = int(page_width_mm * dpi / 25.4)
     page_height_px = int(page_height_mm * dpi / 25.4)
     
@@ -66,14 +66,15 @@ def images_to_pdf(images, output_pdf_path, rotate):
         if img.mode != 'RGB':
             img = img.convert('RGB')
 
-        if rotate:
-            img = img.rotate(90, expand=True)
+        if 'rotate' in img_info:
+            rotate_angle = img_info.get('rotate', 0)
+            img = img.rotate(rotate_angle, expand=True)
         
         if img_info['adoptation'] == 'fit':
             # Изменяем размер изображения под страницу, сохраняя пропорции
-            img_resized = resize_image_to_fit(img, page_width_px, page_height_px)
+            img_resized = resize_image_to_fit(img, image_width_px, image_height_px)
         else:
-            img_resized = resize_image_to_exact(img, page_width_px, page_height_px, gravity=img_info["gravity"])
+            img_resized = resize_image_to_exact(img, image_width_px, image_height_px, gravity=img_info["gravity"])
             print("Ресайзнутое изображение:", img_resized.size)
         # Создаем белую страницу нужного размера
         page = Image.new('RGB', (page_width_px, page_height_px), 'white')
@@ -126,16 +127,15 @@ def resize_image_to_exact(img, target_width, target_height, gravity):
     # return img
 
 # Пример использования
-if __name__ == "__main__":
-
-    config = read_json('cards/4.json')
+def process_card(config_name):
+    config = read_json(config_name)
 
     if "parent" in config:
         parent_config = read_json(config["parent"])
         config = deep_merge(parent_config, config)
 
 
-    background_path = config['layout']
+    background_path = config['layout']['path']
 
     # Open image
     img = Image.open(background_path).convert("RGBA")
@@ -144,6 +144,7 @@ if __name__ == "__main__":
     draw = ImageDraw.Draw(img)
 
     draw_text(
+        draw,
         text=config['username_info']['content'],
         position=config['username_info']["position"],
         font_name=config['username_info']['font'],
@@ -151,6 +152,7 @@ if __name__ == "__main__":
     )
 
     draw_text(
+        draw,
         text=config['cardname_info']['content'],
         position=config['cardname_info']["position"],
         font_name=config['cardname_info']['font'],
@@ -175,16 +177,22 @@ if __name__ == "__main__":
                 {
                     'path': photo_path,
                     'adoptation': 'aspect_fit',
-                    "gravity": config['image'].get("gravity", "center")
+                    "gravity": config['image'].get("gravity", "center"),
+                    "rotate": config['image'].get('rotate', 0)
                 },
                 {
                     'path': layout_path,
                     'adoptation': 'fit',
+                    "rotate": config['layout'].get('rotate', 0)
                 },
-                    
             ], 
-            output_path, 
-            config.get('rotate_90', False)
+            output_path,
         )
     except Exception as e:
         print(f"Ошибка: {e}")
+
+
+if "__main__" == __name__:
+    for i in range(4):
+        id = i+1
+        process_card(f'cards/{id}.json')
